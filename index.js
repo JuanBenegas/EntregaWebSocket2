@@ -17,22 +17,6 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/src/public'))
 app.use('/', viewsRoutes)
 
-const httpServer = app.listen(SERVER_PORT, () => {
-    console.log(`Conectado al server en el puerto: ${SERVER_PORT}`)
-})
-
-const socketServer = new Server(httpServer)
-
-socketServer.on('connection', async socket => {
-    try {
-        console.log("Nuevo forro conectado ")
-        socket.emit('getproducts', await getProduct())
-    }
-    catch (e) {
-        console.log(e)
-    }
-})
-
 const viewsPath = resolve('src/views')
 
 app.engine('handlebars', engine({
@@ -42,17 +26,29 @@ app.engine('handlebars', engine({
 app.set('view engine', 'handlebars')
 app.set('views', viewsPath)
 
+const httpServer = app.listen(SERVER_PORT, () => {
+    console.log(`Conectado al server en el puerto: ${SERVER_PORT}`)
+})
 
+const socketServer = new Server(httpServer)
 
-async function getProduct() {
-    console.log("Entramos aca2")
+socketServer.on('connection', async socket => {
     try {
-        const data = await manager.getProducts()
-        if (data instanceof Error) {
-            return null
-        }
-        return data
-    } catch (error) {
-        console.log(error)
+        console.log("Nuevo cliente conectado")
+        socket.emit('getproducts', await manager.getProducts())
+
+        socket.on('deleteProduct', async id => {
+            await manager.deleteProduct(parseInt(id))
+            socketServer.emit('actualizarProductos', await manager.getProducts())
+        })
+
+        socket.on('addProduct', async product => {
+            console.log("Este prdo se añadio ", product)
+            await manager.addProductFile(product)
+            socketServer.emit('actualizarProductos', await manager.getProducts())
+        })
     }
-}
+    catch (e) {
+        console.log(e)
+    }
+})

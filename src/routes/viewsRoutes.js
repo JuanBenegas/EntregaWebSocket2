@@ -14,7 +14,8 @@ viewsRoutes.get('/', async (req, res) => {
 })
 
 viewsRoutes.get('/realtimeproducts', async (req, res) => {
-    res.render('realtimeproducts', {title: 'Realtime products'})
+    const prods = await manager.getProducts()
+    res.render('realtimeproducts', {title: 'Realtime products', prods})
 })
 
 export default viewsRoutes

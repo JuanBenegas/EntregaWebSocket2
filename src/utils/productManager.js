@@ -77,6 +77,7 @@ class ProductManager {
     async deleteProduct(prodId) {
         let prodsList = JSON.parse(this.productFile)
         let prodEncontrado = prodsList.find(p => p.id === prodId)
+        console.log("Este es el undefined ", prodId)
         if (prodEncontrado) {
             let newProdList = prodsList.filter(p => p.id !== prodEncontrado.id)
             fs.writeFileSync(this.path, JSON.stringify(newProdList, null, 2))
